@@ -1,8 +1,11 @@
 package com.restaurantevirtual.service;
 
+import com.restaurantevirtual.exception.EmailUniqueViolationException;
+import com.restaurantevirtual.exception.EntityNotFoundException;
+import com.restaurantevirtual.exception.PasswordInvalidException;
 import com.restaurantevirtual.model.entity.User;
 import com.restaurantevirtual.repository.RepositoryUser;
-import jakarta.persistence.EntityNotFoundException;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,13 +22,21 @@ public class ServiceUser {
         this.repositoryUser = repositoryUser;
     }
 
+
+    @Transactional
     public User create(User usuario) {
 
-            return repositoryUser.save(usuario);
+        if(repositoryUser.findByEmail(usuario.getEmail()).isPresent()) {
+            throw  new EmailUniqueViolationException(String.format("O e-mail '%s' já está cadastrado.",usuario.getEmail()));
+        }
+
+        return repositoryUser.save(usuario);
+
     }
 
     public User findUserId(UUID id) {
-        return  repositoryUser.findById(id).orElseThrow(() ->new EntityNotFoundException(String.format("Usuário id=%s não encontrado", id)));
+        return  repositoryUser.findById(id).orElseThrow(
+                () ->new EntityNotFoundException(String.format("Usuário id= %s não encontrado", id)));
     }
 
     public List<User> searchAllUsers() {
@@ -42,16 +53,16 @@ public class ServiceUser {
     @Transactional
     public void UpdatePassword(String passedPassword, String currentPassword, String confirmPassword, UUID id) {
 
-        if(!currentPassword.equals(confirmPassword)){
-            throw  new IllegalArgumentException("Senha nova não confere com a senha de confirmação ");
-
-        }
         User user = findUserId(id);
 
-        if(!passedPassword.equals(user.getPassword())){
-            throw  new IllegalArgumentException("Senha incorreta");
+        if (!passedPassword.equals(user.getPassword())) {
+            throw new PasswordInvalidException("Senha atual incorreta");
         }
-        user.setPassword(currentPassword);
 
+        if (!currentPassword.equals(confirmPassword)) {
+            throw new PasswordInvalidException("Nova senha não confere com a confirmação");
+        }
+
+        user.setPassword(currentPassword);
     }
 }

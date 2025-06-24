@@ -7,6 +7,7 @@ import com.restaurantevirtual.model.dto.DTOResponseUser;
 import com.restaurantevirtual.model.dto.mapper.UserMapper;
 import com.restaurantevirtual.model.entity.User;
 import com.restaurantevirtual.service.ServiceUser;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +28,7 @@ public class userController {
     }
 
     @PostMapping
-    public ResponseEntity<DTOResponseUser> createUser(@RequestBody DTOUser dto){
+    public ResponseEntity<DTOResponseUser> createUser(@Valid @RequestBody DTOUser dto){
 
         User user = service.create(UserMapper.toUser(dto));
 
@@ -58,7 +59,7 @@ public class userController {
 
     }
     @PatchMapping("/{id}")
-    public ResponseEntity<Void> updatePassword(@PathVariable UUID id,@RequestBody DTOUpdatePassword dto){
+    public ResponseEntity<Void> updatePassword(@Valid @PathVariable UUID id,@RequestBody DTOUpdatePassword dto){
 
        service.UpdatePassword(dto.getPassedPassword(),dto.getCurrentPassword(),dto.getConfirmPassword(),id);
 
